@@ -63,16 +63,16 @@ def can_fold(state):
 	return not can_bet(state)
 
 def facing_bet(state):
-    return can_fold(state)
+	return can_fold(state)
 
 def facing_bet_call(state):
-    return to_decision(state) == 3
+	return to_decision(state) == 3
 
 def facing_bet_fold(state):
-    return to_decision(state) == 4
+	return to_decision(state) == 4
 
 def call_closes_action(state):
-    return facing_bet_call(state) or facing_bet_fold(state) 
+	return facing_bet_call(state) or facing_bet_fold(state) 
 
 def num_actions(state):
 	assert is_internal(state)
@@ -153,7 +153,7 @@ def pot_size(state):
 		t       = state - (num_internal() + 1)
 		first   = t/3%2
 		second  = t/3/2
-                return 4 + first + second
+		return 4 + first + second
 
 def pot_contribution(state, player):
 	assert is_terminal(state)
