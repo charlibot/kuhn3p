@@ -1,16 +1,16 @@
 from kuhn3p import betting, deck, Player
 
-class Individual(Player):
+class Individual2(Player):
     def __init__(self):
         #opponents have the same relative position, the same opponent will always be before me
         # initialse the player
-        self.oppAaspl1 = [[0.9, 0.8, 0.5, 0.3], [0, 0.1, 0.5, 0.9], [0, 0.1, 0.5, 0.9], [0, 0.1, 0.5, 0.9]]
-        self.oppAaspl2 = [[0.7, 0.4, 0.7, 0.8], [0.1, 0.1, 0.4, 1], [0, 0, 0.7, 1], [0, 0, 0.7, 1]]
-        self.oppAaspl3 = [[0.1, 0.1, 0.6, 0.7], [0, 0.1, 0.7, 0.9], [0, 0, 0.4, 0.7], [0, 0, 0.3, 1]]
+        self.oppAaspl1 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
+        self.oppAaspl2 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
+        self.oppAaspl3 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
         
-        self.oppBaspl1 = [[0.9, 0.8, 0.5, 0.3], [0, 0.1, 0.5, 0.9], [0, 0.1, 0.5, 0.9], [0, 0.1, 0.5, 0.9]]
-        self.oppBaspl2 = [[0.7, 0.4, 0.7, 0.8], [0.1, 0.1, 0.4, 1], [0, 0, 0.7, 1], [0, 0, 0.7, 1]]
-        self.oppBaspl3 = [[0.1, 0.1, 0.6, 0.7], [0, 0.1, 0.7, 0.9], [0, 0, 0.4, 0.7], [0, 0, 0.3, 1]]
+        self.oppBaspl1 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
+        self.oppBaspl2 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
+        self.oppBaspl3 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
         
     def start_hand(self, position, card):
         self.position = position
@@ -131,7 +131,7 @@ class Individual(Player):
     def end_hand(self, position, card, state, shown_cards):
         #print betting.to_string(state)
         #print shown_cards
-        #print
+        #print state
         amount = 0.1
         # need to update the matrices 
         if state == 12:
@@ -164,7 +164,7 @@ class Individual(Player):
                 self.increment(self.pl1, 1, shown_cards[0], amount)
             elif position == 2:
                 self.decrement(self.pl1, 0, shown_cards[0], amount)
-                self.decrement(self.pl1, 1, shown_cards[0], amount)
+                self.increment(self.pl1, 1, shown_cards[0], amount)
         elif state == 24:
             if position == 0:
                 self.decrement(self.pl2, 0, shown_cards[1], amount)  
@@ -196,7 +196,7 @@ class Individual(Player):
             elif position == 1:
                 self.increment(self.pl3, 1, shown_cards[2], amount)
             elif position == 2:
-                self.increment(self.pl2, 0, shown_cards[0], amount)
+                self.increment(self.pl2, 0, shown_cards[1], amount)
         elif state == 23:
             if position == 0:
                 self.increment(self.pl2, 0, shown_cards[1], amount)
@@ -236,20 +236,24 @@ class Individual(Player):
                 self.increment(self.pl2, 1, shown_cards[1], amount)
                 self.increment(self.pl1, 0, shown_cards[0], amount)
 
-
     def increment(self, matrix, node, card, amount):
         if card == None:
             return
-        matrix[node][card] += amount
-        if matrix[node][card] > 1:
-            matrix[node][card] = 1
+        matrix[node][card][1] += 1
                 
     def decrement(self, matrix, node, card, amount):
         if card == None:
             return
-        matrix[node][card] -= amount
-        if matrix[node][card] < 0:
-            matrix[node][card] = 0
+        matrix[node][card][0] += 1
+        
+    def getProb(self, matrix, node, card, neg):
+        mysum = matrix[node][card][0] + matrix[node][card][1]
+        if mysum == 0:
+            return 0
+        elif neg:
+            return matrix[node][card][0]/mysum
+        else:
+            return matrix[node][card][1]/mysum
         
     def p1node0(self, card):
         # f = ap0 + (1-p0)(bp1 + b'(1-p1) + cp2 + c'(1-p2) + dp3 + d'(1-p3) + e)
@@ -268,14 +272,14 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*((1-self.pl2[1][x])*(1-self.pl3[2][y])*self.payoff(card, -1, -1, 4) + (1-self.pl2[1][x])*self.pl3[2][y]*self.payoff(card, -1, y, 5) + self.pl2[1][x]*(1-self.pl3[3][y])*self.payoff(card, x, -1, 5) + self.pl2[1][x]*self.pl3[3][y]*self.payoff(card, x, y, 6))
-                    b += (1.0/6)*((1-self.pl2[0][x])*self.pl3[0][y]*(1-self.pl2[3][x])*self.payoff(card, -1, y, 5) + (1-self.pl2[0][x])*self.pl3[0][y]*self.pl2[3][x]*self.payoff(card, x, y, 6))
-                    _b += (1.0/6)*((1-self.pl2[0][x])*self.pl3[0][y]*(1-self.pl2[2][x])*self.payoff(-1, -1, y, 5) + (1-self.pl2[0][x])*self.pl3[0][y]*self.pl2[2][x]*self.payoff(-1, x, y, 6))
-                    c += (1.0/6)*(self.pl2[0][x]*(1-self.pl3[1][y])*self.payoff(card, x, -1, 5))
-                    _c += (1.0/6)*(self.pl2[0][x]*(1-self.pl3[1][y])*self.payoff(-1, x, -1, 4))
-                    d += (1.0/6)*(self.pl2[0][x]*self.pl3[1][y]*self.payoff(card, x, y, 6))
-                    _d += (1.0/6)*(self.pl2[0][x]*self.pl3[1][y]*self.payoff(-1, x, y, 6))
-                    e += (1.0/6)*((1-self.pl2[0][x])*(1-self.pl3[0][y])*self.payoff(card, x, y, 3))
+                    a += (1.0/6)*(self.getProb(self.pl2, 1, x, True)*self.getProb(self.pl3, 2, y, True)*self.payoff(card, -1, -1, 4) + self.getProb(self.pl2, 1, x, True)*self.getProb(self.pl3, 2, y, False)*self.payoff(card, -1, y, 5) + self.getProb(self.pl2, 1, x, False)*self.getProb(self.pl3, 3, y, True)*self.payoff(card, x, -1, 5) + self.getProb(self.pl2, 1, x, False)*self.getProb(self.pl3, 3, y, False)*self.payoff(card, x, y, 6))
+                    b += (1.0/6)*(self.getProb(self.pl2, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl2, 3, x, True)*self.payoff(card, -1, y, 5) + self.getProb(self.pl2, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl2, 3, x, False)*self.payoff(card, x, y, 6))
+                    _b += (1.0/6)*(self.getProb(self.pl2, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl2, 2, x, True)*self.payoff(-1, -1, y, 5) + self.getProb(self.pl2, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl2, 2, x, False)*self.payoff(-1, x, y, 6))
+                    c += (1.0/6)*(self.getProb(self.pl2, 0, x, False)*self.getProb(self.pl3, 1, y, True)*self.payoff(card, x, -1, 5))
+                    _c += (1.0/6)*(self.getProb(self.pl2, 0, x, False)*self.getProb(self.pl3, 1, y, True)*self.payoff(-1, x, -1, 4))
+                    d += (1.0/6)*(self.getProb(self.pl2, 0, x, False)*self.getProb(self.pl3, 1, y, False)*self.payoff(card, x, y, 6))
+                    _d += (1.0/6)*(self.getProb(self.pl2, 0, x, False)*self.getProb(self.pl3, 1, y, False)*self.payoff(-1, x, y, 6))
+                    e += (1.0/6)*(self.getProb(self.pl2, 0, x, True)*self.getProb(self.pl3, 0, y, True)*self.payoff(card, x, y, 3))
         if b < _b:
             self.p1 = 0
         else:
@@ -292,7 +296,7 @@ class Individual(Player):
             self.p3 = 1
             
         g = b*self.p1 + _b*(1-self.p1) + c*self.p2 + _c*(1-self.p2) + d*self.p3 + _d*(1-self.p3) + e
-
+        
         if a < g:
             p0 = 0
         else:
@@ -324,12 +328,12 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*(1-self.pl1[0][x])*((1-self.pl3[1][y])*(1-self.pl1[2][x])*self.payoff(card, -1, -1, 4) + (1-self.pl3[1][y])*self.pl1[2][x]*self.payoff(card, x, -1, 5) + self.pl3[1][y]*(1-self.pl1[3][x])*self.payoff(card, -1, y, 5) + self.pl3[1][y]*self.pl1[3][x]*self.payoff(card, x, y, 6))
-                    b += (1.0/6)*(1-self.pl1[0][x])*self.pl3[0][y]*(1-self.pl1[1][x])*self.payoff(card, -1, y, 5)
-                    _b += (1.0/6)*(1-self.pl1[0][x])*self.pl3[0][y]*(1-self.pl1[1][x])*self.payoff(-1, -1, y, 4)
-                    c += (1.0/6)*(1-self.pl1[0][x])*self.pl3[0][y]*self.pl1[1][x]*self.payoff(card, x, y, 6)
-                    _c += (1.0/6)*(1-self.pl1[0][x])*self.pl3[0][y]*self.pl1[1][x]*self.payoff(-1, x, y, 5)
-                    d += (1.0/6)*(1-self.pl1[0][x])*(1-self.pl3[0][y])*self.payoff(card, x, y, 3)
+                    a += (1.0/6)*self.getProb(self.pl1, 0, x, True)*(self.getProb(self.pl3, 1, y, True)*self.getProb(self.pl1, 2, x, True)*self.payoff(card, -1, -1, 4) + self.getProb(self.pl3, 1, y, True)*self.getProb(self.pl1, 2, x, False)*self.payoff(card, x, -1, 5) + self.getProb(self.pl3, 1, y, False)*self.getProb(self.pl1, 3, x, True)*self.payoff(card, -1, y, 5) + self.getProb(self.pl3, 1, y, False)*self.getProb(self.pl1, 3, x, False)*self.payoff(card, x, y, 6))
+                    b += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl1, 1, x, True)*self.payoff(card, -1, y, 5)
+                    _b += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl1, 1, x, True)*self.payoff(-1, -1, y, 4)
+                    c += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl1, 1, x, False)*self.payoff(card, x, y, 6)
+                    _c += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl3, 0, y, False)*self.getProb(self.pl1, 1, x, False)*self.payoff(-1, x, y, 5)
+                    d += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl3, 0, y, True)*self.payoff(card, x, y, 3)
         if b < _b:
             self.q2 = 0
         else:
@@ -357,8 +361,8 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*self.pl1[0][x]*((1-self.pl3[3][y])*self.payoff(card, x, -1, 5) + self.pl3[3][y]*self.payoff(card, x, y, 6))
-                    _a += (1.0/6)*self.pl1[0][x]*((1-self.pl3[2][y])*self.payoff(-1, x, -1, 4) + self.pl3[2][y]*self.payoff(-1, x, y, 5))
+                    a += (1.0/6)*self.getProb(self.pl1, 0, x, False)*(self.getProb(self.pl3, 3, y, True)*self.payoff(card, x, -1, 5) + self.getProb(self.pl3, 3, y, False)*self.payoff(card, x, y, 6))
+                    _a += (1.0/6)*self.getProb(self.pl1, 0, x, False)*(self.getProb(self.pl3, 2, y, True)*self.payoff(-1, x, -1, 4) + self.getProb(self.pl3, 2, y, False)*self.payoff(-1, x, y, 5))
         
         if a < _a:
             q1 = 0
@@ -381,8 +385,8 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*(1-self.pl1[0][x])*(1-self.pl2[0][y])*((1-self.pl1[1][x])*(1-self.pl2[2][y])*self.payoff(card, -1, -1, 4) + (1-self.pl1[1][x])*self.pl2[2][y]*self.payoff(card, -1, y, 5) + self.pl1[1][x]*(1-self.pl2[3][y])*self.payoff(card, x, -1, 5) + self.pl1[1][x]*self.pl2[3][y]*self.payoff(card, x, y, 6))
-                    _a += (1.0/6)*(1-self.pl1[0][x])*(1-self.pl2[0][y])*self.payoff(card, x, y, 3)
+                    a += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl2, 0, y, True)*(self.getProb(self.pl1, 1, x, True)*self.getProb(self.pl2, 2, y, True)*self.payoff(card, -1, -1, 4) + self.getProb(self.pl1, 1, x, True)*self.getProb(self.pl2, 2, y, False)*self.payoff(card, -1, y, 5) + self.getProb(self.pl1, 1, x, False)*self.getProb(self.pl2, 3, y, True)*self.payoff(card, x, -1, 5) + self.getProb(self.pl1, 1, x, False)*self.getProb(self.pl2, 3, y, False)*self.payoff(card, x, y, 6))
+                    _a += (1.0/6)*self.getProb(self.pl1, 0, x, True)*self.getProb(self.pl2, 0, y, True)*self.payoff(card, x, y, 3)
         
         if a < _a:
             r0 = 0
@@ -399,8 +403,8 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*(1-self.pl1[0][x])*(self.pl2[0][y])*((1-self.pl1[3][x])*self.payoff(card, -1, y, 5) + self.pl1[3][x]*self.payoff(card, x, y, 6))
-                    _a += (1.0/6)*(1-self.pl1[0][x])*(self.pl2[0][y])*((1-self.pl1[2][x])*self.payoff(-1, -1, y, 4) + self.pl1[2][x]*self.payoff(-1, x, y, 5))
+                    a += (1.0/6)*self.getProb(self.pl1, 0, x, True)*(self.getProb(self.pl2, 0, y, False))*(self.getProb(self.pl1, 3, x, True)*self.payoff(card, -1, y, 5) + self.getProb(self.pl1, 3, x, False)*self.payoff(card, x, y, 6))
+                    _a += (1.0/6)*self.getProb(self.pl1, 0, x, True)*(self.getProb(self.pl2, 0, y, False))*(self.getProb(self.pl1, 2, x, True)*self.payoff(-1, -1, y, 4) + self.getProb(self.pl1, 2, x, False)*self.payoff(-1, x, y, 5))
         if a < _a:
             r1 = 0
         else:
@@ -416,8 +420,8 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*self.pl1[0][x]*(1-self.pl2[1][y])*self.payoff(card, x, -1, 5)
-                    _a += (1.0/6)*self.pl1[0][x]*(1-self.pl2[1][y])*self.payoff(-1, x, -1, 4)
+                    a += (1.0/6)*self.getProb(self.pl1, 0, x, False)*self.getProb(self.pl2, 1, y, True)*self.payoff(card, x, -1, 5)
+                    _a += (1.0/6)*self.getProb(self.pl1, 0, x, False)*self.getProb(self.pl2, 1, y, True)*self.payoff(-1, x, -1, 4)
 
         if a < _a:
             r2 = 0
@@ -434,8 +438,8 @@ class Individual(Player):
             for y in range(deck.num_cards()):
                 # player 3 cards
                 if x != y and x != card and y != card:
-                    a += (1.0/6)*self.pl1[0][x]*self.pl2[1][y]*self.payoff(card, x, y, 6)
-                    _a += (1.0/6)*self.pl1[0][x]*self.pl2[1][y]*self.payoff(-1, x, y, 5)
+                    a += (1.0/6)*self.getProb(self.pl1, 0, x, False)*self.getProb(self.pl2, 1, y, False)*self.payoff(card, x, y, 6)
+                    _a += (1.0/6)*self.getProb(self.pl1, 0, x, False)*self.getProb(self.pl2, 1, y, False)*self.payoff(-1, x, y, 5)
 
         if a < _a:
             r3 = 0
