@@ -1,9 +1,8 @@
 from kuhn3p import betting, deck, Player
-''' This is the same as Individual2 but if a player folds, there is an assumption they had a bad card'''
-class Individual3(Player):
+class KuhnYouHandleIt(Player):
     def __init__(self):
-        #opponents have the same relative position, the same opponent will always be before me
-        # initialse the player
+        # opponents have the same relative position - the same opponent will always be before me
+        # initialse the opponent matrices in the different positions
         self.oppAaspl1 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
         self.oppAaspl2 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
         self.oppAaspl3 = [[[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]], [[0,0], [0,0], [0,0], [0,0]]]
@@ -20,39 +19,37 @@ class Individual3(Player):
             self.pl2 = self.oppAaspl2
             self.pl3 = self.oppBaspl3
         if position == 1:
+            # I am player 2
             self.pl3 = self.oppAaspl3
             self.pl1 = self.oppBaspl1
         if position == 2:
+            # I am player 3
             self.pl1 = self.oppAaspl1
             self.pl2 = self.oppBaspl2
         
 
     def act(self, state, card):
-        #betting.actor could give the opponent NOPE
+        # find the action to perform
         if self.position == 0:
             if state == 0:
-                #print 'p1 at node 0'
                 # at decision node 0
                 if self.p1node0(card) == 1:
                     return betting.BET
                 else:
                     return betting.CHECK
             elif state == 3:
-                #print 'p1 at node 1'
                 # at decision node 1
                 if self.p1node1(card) == 1:
                     return betting.CALL
                 else:
                     return betting.FOLD
             elif state == 6:
-                #print 'p1 at node 2'                
                 # at decision node 2
                 if self.p1node2(card) == 1:
                     return betting.CALL
                 else:
                     return betting.FOLD
             elif state == 9:
-                #print 'p1 at node 3'
                 # at decision node 3
                 if self.p1node3(card) == 1:
                     return betting.CALL
@@ -63,28 +60,24 @@ class Individual3(Player):
         
         if self.position == 1:
             if state == 1:
-                #print 'p2 at node 0'
                 # at decision node 0
                 if self.p2node0(card) == 1:
                     return betting.BET
                 else:
                     return betting.CHECK
             elif state == 4:
-                #print 'p2 at node 1'
                 # at decision node 1
                 if self.p2node1(card) == 1:
                     return betting.CALL
                 else:
                     return betting.FOLD
             elif state == 7:
-                #print 'p2 at node 2'
                 # at decision node 2
                 if self.p2node2(card) == 1:
                     return betting.CALL
                 else:
                     return betting.FOLD
             elif state == 10:
-                #print 'p2 at node 3'
                 # at decision node 3
                 if self.p2node3(card) == 1:
                     return betting.CALL
@@ -95,28 +88,24 @@ class Individual3(Player):
                 
         if self.position == 2:
             if state == 2:
-                #print 'p3 at node 0'
                 # at decision node 0
                 if self.p3node0(card) == 1:
                     return betting.BET
                 else:
                     return betting.CHECK
             elif state == 5:
-                #print 'p3 at node 1'
                 # at decision node 1
                 if self.p3node1(card) == 1:
                     return betting.CALL
                 else:
                     return betting.FOLD
             elif state == 8:
-                #print 'p3 at node 2'
                 # at decision node 2
                 if self.p3node2(card) == 1:
                     return betting.CALL
                 else:
                     return betting.FOLD
             elif state == 11:
-                #print 'p3 at node 3'
                 # at decision node 3
                 if self.p3node3(card) == 1:
                     return betting.CALL
@@ -125,10 +114,11 @@ class Individual3(Player):
             else:
                 print 'Something went wrong as p3'
 
-        print 'Oh god why are we here?'
+        print 'Invalid position'
         return betting.BET
     
     def end_hand(self, position, card, state, shown_cards):
+        # when a hand finishes we update count matrices with the shown_cards
         amount = 1
         # these amounts are used when a fold has occurred
         jackAmount = 1
@@ -164,6 +154,7 @@ class Individual3(Player):
                 self.decrement(self.pl1, 1, None, foldAmounts)                
                 self.decrement(self.pl2, 2, None, foldAmounts)
         elif state == 21:
+            # player 1 folds, player 2 calls after player 3 bets
             if position == 0:
                 self.decrement(self.pl2, 0, shown_cards[1], amount)
                 self.increment(self.pl3, 0, shown_cards[2], amount)  
@@ -178,6 +169,7 @@ class Individual3(Player):
                 self.decrement(self.pl1, 1, None, foldAmounts)                
                 self.increment(self.pl2, 2, shown_cards[1], amount)
         elif state == 18:
+            # player 1 calls, player 2 folds after player 3 bets
             if position == 0:
                 self.decrement(self.pl2, 0, None, foldAmounts)
                 self.increment(self.pl3, 0, shown_cards[2], amount)  
@@ -192,6 +184,7 @@ class Individual3(Player):
                 self.decrement(self.pl2, 0, None, foldAmounts)
                 self.decrement(self.pl2, 3, None, foldAmounts)
         elif state == 24:
+            # players 1 and 2 call after player 3 bets
             if position == 0:
                 self.decrement(self.pl2, 0, shown_cards[1], amount)  
                 self.increment(self.pl3, 0, shown_cards[2], amount)  
@@ -219,6 +212,7 @@ class Individual3(Player):
                 self.increment(self.pl2, 0, None, foldAmounts)
                 self.decrement(self.pl1, 2, None, foldAmounts)    
         elif state == 20:
+            # player 1 calls, player 3 folds after player 2 bets
             if position == 0:
                 self.increment(self.pl2, 0, shown_cards[1], amount)
                 self.decrement(self.pl3, 1, None, foldAmounts)
@@ -231,6 +225,7 @@ class Individual3(Player):
                 self.increment(self.pl1, 2, shown_cards[0], amount)
                 self.increment(self.pl2, 0, shown_cards[1], amount)                
         elif state == 17:
+            # player 1 folds, player 3 calls after player 2 bets
             if position == 0:
                 self.increment(self.pl2, 0, shown_cards[1], amount)
                 self.increment(self.pl3, 1, shown_cards[2], amount)
@@ -243,6 +238,7 @@ class Individual3(Player):
                 self.increment(self.pl2, 0, shown_cards[1], amount)
                 self.decrement(self.pl1, 3, None, foldAmounts)    
         elif state == 23:
+            # players 1 and 3 call after player 2 bets
             if position == 0:
                 self.increment(self.pl2, 0, shown_cards[1], amount)
                 self.increment(self.pl3, 1, shown_cards[2], amount)
@@ -255,7 +251,7 @@ class Individual3(Player):
                 self.increment(self.pl2, 0, shown_cards[1], amount)
                 self.increment(self.pl1, 3, shown_cards[0], amount)
         elif state == 13:
-            # player 1 bets and 2 and 3 have folded
+            # players 2 and 3 fold after player 1 bets
             if position == 0:
                 self.decrement(self.pl2, 1, None, foldAmounts)
                 self.decrement(self.pl3, 2, None, foldAmounts)
@@ -266,6 +262,7 @@ class Individual3(Player):
                 self.increment(self.pl1, 0, None, foldAmounts)
                 self.decrement(self.pl2, 1, None, foldAmounts)
         elif state == 19:
+            # player 3 calls, player 2 folds after player 1 bets
             if position == 0:
                 self.decrement(self.pl2, 1, None, foldAmounts)
                 self.increment(self.pl3, 2, shown_cards[2], amount)
@@ -276,6 +273,7 @@ class Individual3(Player):
                 self.increment(self.pl1, 0, shown_cards[0], amount)
                 self.decrement(self.pl2, 1, None, foldAmounts)
         elif state == 16:
+            # player 3 folds, player 2 calls after player 1 bets
             if position == 0:
                 self.decrement(self.pl3, 2, None, foldAmounts)
                 self.increment(self.pl2, 1, shown_cards[1], amount)
@@ -286,6 +284,7 @@ class Individual3(Player):
                 self.increment(self.pl2, 1, shown_cards[1], amount)
                 self.increment(self.pl1, 0, shown_cards[0], amount)
         elif state == 22:
+            # players 2 and 3 call after player 1 bets
             if position == 0:
                 self.increment(self.pl2, 1, shown_cards[1], amount)
                 self.increment(self.pl3, 3, shown_cards[2], amount)
@@ -298,6 +297,7 @@ class Individual3(Player):
 
     def increment(self, matrix, node, card, amount):
         if card == None:
+            # checks if amount is not an array
             if isinstance(amount, (int, long)):
                 print 'Should not be here'
                 return
@@ -308,6 +308,7 @@ class Individual3(Player):
                 
     def decrement(self, matrix, node, card, amount):
         if card == None:
+            # checks if amount is not an array
             if isinstance(amount, (int, long)):
                 print 'Should not be here either'
                 return
@@ -518,6 +519,7 @@ class Individual3(Player):
             
         return r3
             
+    # find the payoff to the player
     def payoff(self, playerCard, card1, card2, pay):
         if playerCard == -1:
             # player has folded
@@ -531,6 +533,7 @@ class Individual3(Player):
             if pay == 3:
                 return -1
             else:
-                return -2        
+                return -2    
+                
     def __str__(self):
-        return 'Individual'
+        return 'KuhnYouHandleIt'

@@ -176,3 +176,19 @@ def to_string(state):
 	else:
 		return 'c'*bettor + 'r' + (first and 'c' or 'f') + (second and 'c' or 'f')
 
+def to_nonterminal_string(state):
+	'''
+	0,1,2 means that many checks
+	3,4,5 means previous player bet after state - 4 checks
+	6,7,8 means bet fold after state - 8 checks
+	9,10,11 means bet call after state - 11 checks
+	'''
+	if state < 3:
+		return 'c'*state
+	elif state < 6:
+		return 'c'*((state - 4) % 3) + 'r'
+	elif state < 9:
+		return 'c'*((state - 8) % 3) + 'rf'
+	elif state < 12:
+		return 'c'*((state - 11) % 3) + 'rc'
+	return 'bam'

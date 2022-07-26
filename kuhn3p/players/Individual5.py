@@ -1,6 +1,6 @@
 import random
 from kuhn3p import betting, deck, Player
-''' This is the same as Individual3 but adds a little bit of randomness to  decisions'''
+''' This is the same as Individual3 but adds a little bit of randomness to  decisions that are not nodes 2 and 3'''
 class Individual5(Player):
     def __init__(self, prob, rng=random.Random()):
         #opponents have the same relative position, the same opponent will always be before me
@@ -38,8 +38,10 @@ class Individual5(Player):
                 #print 'p1 at node 0'
                 # at decision node 0
                 if self.p1node0(card) == 1:
+                    print("Betting");
                     return betting.BET
                 else:
+                    print("Checking");
                     return betting.CHECK
             elif state == 3:
                 #print 'p1 at node 1'
